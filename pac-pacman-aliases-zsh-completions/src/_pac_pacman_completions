@@ -14,8 +14,9 @@ _pac() {
         'clean:Clean the package cache'
         'autoclean:Remove old versions of installed packages'
         'find:Find a package by binary name'
-        'aur-search:Search in the AUR'
-        'aur-install:Install a package from the AUR'
+        'aur search:Search in the AUR'
+        'aur install:Install a package from the AUR'
+        'aur upgrade:Upgrade AUR packages'
     )
     _describe 'command' commands -o nosort
 }
