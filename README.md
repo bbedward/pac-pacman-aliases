@@ -13,6 +13,13 @@ The point is that I maintain a lot of debian-based systems, but use arch on my p
 
 You can put `alias apt="pac"` in `~/.zshrc` or `~/.bashrc` to make it a synonym for apt.
 
+## Glob pattern search
+
+I prefer glob pattern search to instead of regex searching the search feature takes globs.
+
+e.g. `pac search 'nvidia*'` instead of `pacman -Ss 'nvidia.*'`
+
+
 ## Argument Translation
 
 Passing `-y` translated into `--noconfirm` for pacman/paru/yay. This makes `pac install -y nano` equivalent to `apt install -y nano`

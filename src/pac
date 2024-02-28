@@ -139,7 +139,7 @@ case "$1" in
     ;;
     search)
         shift
-        local pattern=$(echo "$@" | sed 's/\*/.*/g;s/\?/./g')
+        pattern=$(echo "$@" | sed 's/\*/.*/g;s/\?/./g')
         pacman -Ss "$pattern"
     ;;
     show)
