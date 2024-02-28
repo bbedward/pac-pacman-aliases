@@ -128,8 +128,14 @@ case "$1" in
         prompt_for_sudo
         $SUDO pacman -Rns $(pacman -Qtdq $NOCONFIRM) $NOCONFIRM
     ;;
-    list-installed)
-        pacman -Q
+    list)
+        if [[ "$2" == "--installed" ]]; then
+            pacman -Q
+        else
+            echo "Unsupported list operation: $2"
+            echo "Supported operations are: --installed"
+            exit 1
+        fi
     ;;
     search)
         shift

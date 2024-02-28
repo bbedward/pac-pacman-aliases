@@ -81,7 +81,7 @@ _pac() {
                 'autoremove:Remove unneeded packages'
                 'clean:Clean the package cache'
                 'autoclean:Remove old versions of installed packages'
-                'list-installed:List all installed packages'
+                'list\ --installed:List all installed packages'
                 'search:Search the package database'
                 'show:Show detailed package information'
                 'find:Find a package by binary name'
@@ -96,7 +96,7 @@ _pac() {
                 'install'|'search')
                     _pac_installable_packages
                     ;;
-                'remove')
+                'remove'|'show')
                     _pac_installed_packages
                     ;;
                 'aur')
