@@ -70,7 +70,6 @@ help() {
 Usage: pac <command> [options]
 
 Commands:
-    update          Update package database
     upgrade         Upgrade all installed packages
     install         Install a new package
     remove          Remove an installed package
@@ -98,8 +97,10 @@ fi
 ### Primary command handler
 case "$1" in
     update)
-        prompt_for_sudo
-        $SUDO pacman -Sy $NOCONFIRM
+        echo "Please use 'upgrade' instead of 'update'."
+        echo "Partial updates are not recommended on arch-based systems."
+        echo "See https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported"
+        exit 1
     ;;
     upgrade)
         prompt_for_sudo

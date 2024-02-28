@@ -1,28 +1,117 @@
 #compdef pac
 
-_pac() {
-    local -a commands
-    commands=(
-        'update:Update package database'
-        'upgrade:Upgrade all installed packages'
-        'install:Install a new package'
-        'remove:Remove an installed package'
-        'search:Search the package database'
-        'show:Show detailed package information'
-        'list-installed:List all installed packages'
-        'autoremove:Remove unneeded packages'
-        'clean:Clean the package cache'
-        'autoclean:Remove old versions of installed packages'
-        'find:Find a package by binary name'
-        'aur search:Search in the AUR'
-        'aur install:Install a package from the AUR'
-        'aur upgrade:Upgrade AUR packages'
-    )
-    _describe 'command' commands -o nosort
+# Function to detect and set the AUR helper
+_detect_aur_helper() {
+    if command -v paru > /dev/null; then
+        AUR_HELPER="paru"
+    elif command -v yay > /dev/null; then
+        AUR_HELPER="yay"
+    else
+        AUR_HELPER=""
+    fi
 }
 
-case "$service" in
-    pac)
-        _pac
-        ;;
-esac
+# Get all installable packages
+_pac_installable_packages() {
+    local -a packages
+    # Use pacman to get the list of installable packages
+    packages=("${(@f)$(pacman -Slq 2>/dev/null)}")
+    _describe 'packages' packages
+}
+
+# Get all installable packages (AUR only)
+# Cache the package list for performance
+_pac_installable_packages_aur() {
+    local cache_ttl=86400 # 24 hours in seconds
+    local cache_file="$HOME/.cache/pac_aur_package_list"
+    _detect_aur_helper
+
+    # Ensure cache directory exists
+    mkdir -p "${cache_file:h}"
+
+    if [[ -z "$AUR_HELPER" ]]; then
+        _message "No AUR helper found."
+        return 1
+    fi
+
+    # Use the cache if it exists to provide immediate completions
+    if [[ -f "$cache_file" ]]; then
+        local -a packages
+        packages=("${(@f)$(<"$cache_file")}")
+        _describe 'AUR packages' packages
+    fi
+
+    # Update the cache in the background if it's missing or stale
+    if [[ ! -f "$cache_file" || $(( $(date +%s) - $(stat -c '%Y' "$cache_file" 2>/dev/null || stat -f '%m' "$cache_file") )) -gt $cache_ttl ]]; then
+        # Asynchronously update the cache without blocking the current shell
+        case "$AUR_HELPER" in
+            paru)
+                (paru -Slq >| "$cache_file" &)
+                ;;
+            yay)
+                (yay -Slqa >| "$cache_file" &)
+                ;;
+        esac
+    fi
+}
+
+# Get all installed packages
+_pac_installed_packages() {
+    local -a packages
+    # Use pacman to get the list of installed packages
+    packages=("${(@f)$(pacman -Qq 2>/dev/null)}")
+    _describe 'installed packages' packages
+}
+
+_pac() {
+    local context state line
+    typeset -A opt_args
+
+    _arguments -C \
+        '1: :->subcmds' \
+        '*:: :->args'
+
+    case $state in
+        subcmds)
+            local -a subcommands
+            subcommands=(
+                'upgrade:Upgrade all installed packages'
+                'install:Install a new package'
+                'remove:Remove an installed package'
+                'autoremove:Remove unneeded packages'
+                'clean:Clean the package cache'
+                'autoclean:Remove old versions of installed packages'
+                'list-installed:List all installed packages'
+                'search:Search the package database'
+                'show:Show detailed package information'
+                'find:Find a package by binary name'
+                'aur search:Search in the AUR'
+                'aur install:Install a package from the AUR'
+                'aur upgrade:Upgrade AUR packages'
+            )
+            _describe -t subcmds "pac subcommands" subcommands -o nosort
+            ;;
+        args)
+            case $words[1] in
+                'install'|'search')
+                    _pac_installable_packages
+                    ;;
+                'remove')
+                    _pac_installed_packages
+                    ;;
+                'aur')
+                    if [[ "$words[2]" == "search" || "$words[2]" == "install" ]]; then
+                        _pac_installable_packages_aur
+                    else
+                        _message "No additional completion for this AUR command"
+                    fi
+                    ;;
+                *)
+                    _message "No additional completion for this command"
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_pac "$@"
