@@ -1,55 +1,43 @@
-# Define completion function
-_pac_bash_completion() {
+# Bash completion for pac
+
+_pac_completion() {
     local cur prev words cword
-    _init_completion -n : || return
+    _get_comp_words_by_ref -n : cur prev words cword
 
-    # Call the function to detect the AUR helper and set it in a variable
-    _detect_aur_helper() {
-        if command -v paru > /dev/null; then
-            AUR_HELPER="paru"
-        elif command -v yay > /dev/null; then
-            AUR_HELPER="yay"
-        else
-            AUR_HELPER=""
-        fi
-    }
+    # Main pac commands
+    local commands="upgrade install remove list search show find clean autoremove autoclean depends rdepends aur"
 
-    _detect_aur_helper
+    # List and AUR subcommands
+    local list_subcommands="--installed --manual --upgradable --all"
+    local aur_subcommands="search install upgrade"
 
-    local subcommands="upgrade install remove autoremove clean autoclean list search show find"
-    local aur_subcommands="aur_search aur_install aur_upgrade"
-
-    if [[ ${cur} == aur_* ]]; then
-        if [[ -n ${AUR_HELPER} ]]; then
-            COMPREPLY=($(compgen -W "${aur_subcommands}" -- ${cur}))
-        fi
-        return 0
-    fi
-
-    if [[ ${cur} == list ]]; then
-        COMPREPLY=($(compgen -W "--installed" -- ${cur}))
-        return 0
-    fi
-
-    # Main command completion
-    if [[ ${cword} -eq 1 ]]; then
-        COMPREPLY=($(compgen -W "${subcommands}" -- ${cur}))
-        return 0
-    fi
-
-    # Placeholder for handling dynamic completion, e.g., for packages
-    # This part is simplified. Bash does not support functions like _describe directly.
-    case ${prev} in
-        install|search|remove|show)
-            # This is a placeholder where you would add your logic for package completions
+    case "${prev}" in
+        list)
+            COMPREPLY=($(compgen -W "${list_subcommands}" -- "${cur}"))
+            return 0
             ;;
         aur)
-            COMPREPLY=($(compgen -W "search install upgrade" -- ${cur}))
+            COMPREPLY=($(compgen -W "${aur_subcommands}" -- "${cur}"))
+            return 0
             ;;
-        *)
+        install|depends|rdepends)
+            # Suggest packages from the official repositories
+            COMPREPLY=($(compgen -W "$(pacman -Slq 2>/dev/null)" -- "${cur}"))
+            return 0
+            ;;
+        show|remove)
+            # Suggest only installed packages
+            COMPREPLY=($(compgen -W "$(pacman -Qq 2>/dev/null)" -- "${cur}"))
+            return 0
             ;;
     esac
+
+    # Complete the arguments to some of the basic commands.
+    if [[ ${cur} == -* ]] ; then
+        return 0
+    fi
+
+    COMPREPLY=($(compgen -W "${commands}" -- "${cur}"))
 }
 
-# Register the completion function for the `pac` command
-complete -F _pac_bash_completion pac
+complete -F _pac_completion pac
