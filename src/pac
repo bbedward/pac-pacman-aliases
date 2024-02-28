@@ -2,6 +2,10 @@
 
 ### pac - A wrapper for pacman, yay, and paru with apt-like usage and bash globbing pattern search instead of regex.
 
+if ! command -v pacman &> /dev/null; then
+    echo "pacman is not installed or not in the PATH. This script requires pacman to run."
+    exit 1
+fi
 
 # Detect if paru or yay is installed and set the AUR_HELPER variable accordingly
 AUR_HELPER=""
@@ -64,28 +68,52 @@ prompt_for_sudo() {
     fi
 }
 
+# Install pacman-contrib for dependency checking
+check_and_install_pactree() {
+    if ! command -v pactree &> /dev/null; then
+        echo "pacman-contrib is not installed, but required for this command."
+        # Prompt the user to install pactree
+        read -p "Would you like to install pacman-contrib? (y/N) " response
+        if [[ "$response" =~ ^[yY](es|ES)?$ ]]; then
+            if ! sudo pacman -S $NOCONFIRM pacman-contrib; then
+                echo "Failed to install pacman-contrib. Exiting."
+                exit 1
+            fi
+            echo ""
+        else
+            echo "pacman-contrib installation skipped. Exiting."
+            exit 1
+        fi
+    fi
+}
+
 # Print help
 help() {
-        cat <<EOF
+    cat <<EOF
 Usage: pac <command> [options]
 
 Commands:
-    upgrade         Upgrade all installed packages
-    install         Install a new package
-    remove          Remove an installed package
-    autoremove      Remove unneeded packages
-    clean           Clean the package cache
-    autoclean       Remove old versions of installed packages
-    list-installed  List all installed packages
-    search          Search the package database
-    show            Show detailed package information
-    find            Find a package by binary name
-    aur search      Search in the AUR
-    aur install     Install a package from the AUR
-    aur upgrade     Upgrade AUR packages
+    upgrade                         Upgrade all installed packages
+    install <pkg>                   Install a new package
+    remove <pkg>                    Remove an installed package
+    autoremove                      Remove unneeded packages
+    clean                           Clean the package cache
+    autoclean                       Remove old versions of installed packages
+    list --installed                Lists all installed packages
+         --manual                   Lists all manually installed packages
+         --upgradable               Lists all upgradable packages
+         --all                      Lists all available packages
+    search <query>                  Search the package database
+    show <pkg>                      Show detailed package information
+    find <binary>                   Find a package by binary name
+    depends <pkg>                   Shows a list of dependencies for <package>
+    rdepends <pkg>                  Shows a list of packages that depend on <package>
+    aur search <query>              Search in the AUR
+    aur install <pkg>               Install a package from the AUR
+    aur upgrade                     Upgrade AUR packages
 
 Options:
-    -y              Answer yes to all questions
+    -y                              Answer yes to all questions
 EOF
 }
 
@@ -102,7 +130,7 @@ case "$1" in
         echo "See https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported"
         exit 1
     ;;
-    upgrade)
+    upgrade|dist-upgrade)
         prompt_for_sudo
         $SUDO pacman -Syu $NOCONFIRM
     ;;
@@ -131,6 +159,12 @@ case "$1" in
     list)
         if [[ "$2" == "--installed" ]]; then
             pacman -Q
+        elif [[ "$2" == "--manual" ]]; then
+            pacman -Qm
+        elif [[ "$2" == "--upgradable" ]]; then
+            pacman -Qu
+        elif [[ "$2" == "--all" ]]; then
+            pacman -Sl
         else
             echo "Unsupported list operation: $2"
             echo "Supported operations are: --installed"
@@ -150,6 +184,16 @@ case "$1" in
         shift
         pacman -F "$@"
     ;;
+    depends)
+        shift
+        check_and_install_pactree
+        pactree -s -d1 -o1 "$@"
+        ;;
+    rdepends)
+        shift
+        check_and_install_pactree
+        pactree -r -s -d1 -o1 "$@"
+        ;;
     aur|--aur)
         if [[ -z "$AUR_HELPER" ]]; then
             echo "No AUR helper found. Please install yay or paru."
