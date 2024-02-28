@@ -6,7 +6,7 @@ arch=('any')
 url="https://github.com/bbedward/pac-pacman-aliases"
 license=('MIT')
 depends=('zsh')
-source=("path-to-your-source")
+source=("https://github.com/bbedward/pac-pacman-aliases/archive/refs/tags/v1.0.zip")
 sha256sums=('SKIP')
 
 package() {
