@@ -1,6 +1,7 @@
 #!/bin/bash
 
-
+NOCONFIRM=""
+AURNOCONFIRM=""
 
 prompt_for_sudo() {
     if [[ $(id -u) -ne 0 ]]; then
@@ -24,6 +25,20 @@ prompt_for_sudo() {
     fi
 }
 
+TEMP_ARGS=()
+for arg in "$@"; do
+    case $arg in
+        -y)
+            NOCONFIRM="--noconfirm"
+            AURNOCONFIRM="--noconfirm --answerdiff None --answerclean None --mflags \"--noconfirm\""
+            ;;
+        *)
+            TEMP_ARGS+=("$arg")
+            ;;
+    esac
+done
+set -- "${TEMP_ARGS[@]}"
+
 help() {
         cat <<EOF
 Usage: pac <command> [options]
@@ -43,7 +58,8 @@ Commands:
     aur-search      Search in the AUR
     aur-install     Install a package from the AUR
 
-For more information on a specific command, type 'pac <command> --help'
+Options:
+    -y              Answer yes to all questions
 EOF
 }
 
@@ -55,33 +71,33 @@ fi
 case "$1" in
     update)
         prompt_for_sudo
-        $SUDO pacman -Sy
+        $SUDO pacman -Sy $NOCONFIRM
     ;;
     upgrade)
         prompt_for_sudo
-        $SUDO pacman -Syu
+        $SUDO pacman -Syu $NOCONFIRM
     ;;
     install)
         shift
         prompt_for_sudo
-        $SUDO pacman -S "$@"
+        $SUDO pacman -S "$@" $NOCONFIRM
     ;;
     remove)
         shift
         prompt_for_sudo
-        $SUDO pacman -R "$@"
+        $SUDO pacman -R "$@" $NOCONFIRM
     ;;
     autoremove)
         prompt_for_sudo
-        $SUDO pacman -Rs $(pacman -Qtdq)
+        $SUDO pacman -Rs $(pacman -Qtdq) $NOCONFIRM
     ;;
     clean)
         prompt_for_sudo
-        $SUDO pacman -Scc
+        $SUDO pacman -Scc $NOCONFIRM
     ;;
     autoclean)
         prompt_for_sudo
-        $SUDO pacman -Rns $(pacman -Qtdq)
+        $SUDO pacman -Rns $(pacman -Qtdq $NOCONFIRM) $NOCONFIRM
     ;;
     list-installed)
         pacman -Q
@@ -105,7 +121,7 @@ case "$1" in
     ;;
     aur-install)
         shift
-        yay -S "$@"
+        yay -S "$@" $AURNOCONFIRM
     ;;
     *)
         help
