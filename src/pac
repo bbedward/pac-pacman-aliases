@@ -3,13 +3,36 @@
 NOCONFIRM=""
 AURNOCONFIRM=""
 
+TEMP_ARGS=()
+for arg in "$@"; do
+    case $arg in
+        -y)
+            NOCONFIRM="--noconfirm"
+            AURNOCONFIRM="--noconfirm --answerdiff None --answerclean None --mflags \"--noconfirm\""
+            ;;
+        *)
+            TEMP_ARGS+=("$arg")
+            ;;
+    esac
+done
+set -- "${TEMP_ARGS[@]}"
+
 prompt_for_sudo() {
     if [[ $(id -u) -ne 0 ]]; then
+        if [[ -n "$AURNOCONFIRM" ]]; then
+            SUDO="sudo"
+            # Ensure we have sudo privileges without user interaction
+            if ! sudo -v; then
+                echo "Failed to obtain sudo privileges."
+                exit 1
+            fi
+            return # Skip the rest of the function
+        fi
        SUDO="sudo"
-        echo "This action requires root privileges. Do you want to proceed? (y/n)"
+        echo "This action requires root privileges. Do you want to proceed? (Y/n)"
         read -r answer
        case "${answer,,}" in
-            y|yes)
+            y|yes|"")
                 if ! sudo -v; then
                     echo "Failed to obtain sudo privileges."
                     exit 1
@@ -24,20 +47,6 @@ prompt_for_sudo() {
       SUDO=""
     fi
 }
-
-TEMP_ARGS=()
-for arg in "$@"; do
-    case $arg in
-        -y)
-            NOCONFIRM="--noconfirm"
-            AURNOCONFIRM="--noconfirm --answerdiff None --answerclean None --mflags \"--noconfirm\""
-            ;;
-        *)
-            TEMP_ARGS+=("$arg")
-            ;;
-    esac
-done
-set -- "${TEMP_ARGS[@]}"
 
 help() {
         cat <<EOF
