@@ -173,7 +173,14 @@ case "$1" in
     ;;
     search)
         shift
-        pattern=$(echo "$@" | sed 's/\*/.*/g;s/\?/./g')
+        # Check if the input contains common regex patterns
+        if [[ "$@" =~ [\^\$\.\|\(\)\[\]\{\}\+\] ]]; then
+            # Input likely contains regex, don't convert
+            pattern="$@"
+        else
+            # Input likely a glob pattern, convert to regex
+            pattern=$(echo "$@" | sed 's/\*/.*/g;s/\?/./g')
+        fi
         pacman -Ss "$pattern"
     ;;
     show)
