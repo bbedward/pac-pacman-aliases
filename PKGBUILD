@@ -5,11 +5,12 @@ pkgdesc="Add pac with apt-like pacman aliases and bash globbing pattern search i
 arch=('any')
 url="https://github.com/bbedward/pac-pacman-aliases"
 license=('MIT')
-source=("https://github.com/bbedward/pac-pacman-aliases/archive/refs/tags/v1.9.1.zip")
+source=("https://github.com/bbedward/pac-pacman-aliases/archive/refs/tags/v1.9.2.zip")
 sha256sums=('SKIP')
 conflicts=('pac-wrapper')
 
 package() {
   install -Dm755 "$srcdir/pac" "$pkgdir/usr/local/bin/pac"
   install -Dm644 "$srcdir/completions.bash" "$pkgdir/usr/share/bash-completion/completions/pac"
+  install -Dm644 "$srcdir/completions.zsh" "$pkgdir/usr/share/zsh/site-functions/_pac_pacman_completions"
 }
