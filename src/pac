@@ -149,7 +149,7 @@ fi
 ### Primary command handler
 case "$1" in
     --version)
-        echo $SCRIPT_VERSION
+        echo "pac v$SCRIPT_VERSION"
     ;;
     update)
         echo "Please use 'upgrade' instead of 'update'."
