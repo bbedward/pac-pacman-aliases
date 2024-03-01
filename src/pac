@@ -22,7 +22,7 @@ NOCONFIRM=""
 AURNOCONFIRM=""
 
 TEMP_ARGS=()
-REMOVE_OPTION=""
+REMOVE_OPTION="-R"
 for arg in "$@"; do
     case $arg in
         -y|--yes)
