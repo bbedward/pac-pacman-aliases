@@ -118,6 +118,7 @@ Commands:
     upgrade                         Upgrade all installed packages
     install <pkg>                   Install a new package
     remove <pkg>                    Remove an installed package
+           --purge                  Remove package and its configuration files
     autoremove                      Remove unneeded packages
     clean                           Clean the package cache
     autoclean                       Remove old versions of installed packages
@@ -136,7 +137,6 @@ Commands:
 
 Options:
     -y                              Answer yes to all questions
-    --purge                         Remove package dependencies and its configuration files.
     --version                       Show the version of pac
 EOF
 }
