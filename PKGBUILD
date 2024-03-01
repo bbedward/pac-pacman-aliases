@@ -1,11 +1,11 @@
 pkgname=pac-pacman-aliases
-pkgver=1.9.4
+pkgver=master
 pkgrel=1
 pkgdesc="Add pac with apt-like pacman aliases, completions, and  globbing search pattern support"
 arch=('any')
 url="https://github.com/bbedward/pac-pacman-aliases"
 license=('MIT')
-source=("https://github.com/bbedward/pac-pacman-aliases/archive/refs/tags/v1.9.4.zip")
+source=("https://github.com/bbedward/pac-pacman-aliases/archive/refs/heads/master.zip")
 sha256sums=('SKIP')
 conflicts=('pac-wrapper')
 

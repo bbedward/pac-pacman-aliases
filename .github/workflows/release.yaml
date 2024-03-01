@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "::set-output name=VERSION::${GITHUB_REF#refs/tags/v}"
+
+      - name: Update script version
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          sed -i "s/^SCRIPT_VERSION=\".*\"/SCRIPT_VERSION=\"$VERSION\"/" ./src/pac
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ./src/pac
+          git commit -m "Update script version to $VERSION"
+          git tag -f "v$VERSION"
+
+      - name: Create zip archive of the source code
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          zip -r source_code_v$VERSION.zip .
+          echo "::set-output name=ZIP_PATH::source_code_v$VERSION.zip"
+        id: zip_source_code
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.zip_source_code.outputs.ZIP_PATH }}
+          asset_name: source_code_v${{ steps.get_version.outputs.VERSION }}.zip
+          asset_content_type: application/zip

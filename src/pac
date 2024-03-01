@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_VERSION="master"
+
 ### pac - A wrapper for pacman, yay, and paru with apt-like usage and bash globbing pattern search instead of regex.
 
 if ! command -v pacman &> /dev/null; then
@@ -135,6 +137,7 @@ Commands:
 Options:
     -y                              Answer yes to all questions
     --purge                         Remove package dependencies and its configuration files.
+    --version                       Show the version of pac
 EOF
 }
 
@@ -145,6 +148,9 @@ fi
 
 ### Primary command handler
 case "$1" in
+    --version)
+        echo $SCRIPT_VERSION
+    ;;
     update)
         echo "Please use 'upgrade' instead of 'update'."
         echo "Partial updates are not recommended on arch-based systems."
