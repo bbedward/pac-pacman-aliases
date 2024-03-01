@@ -20,15 +20,20 @@ NOCONFIRM=""
 AURNOCONFIRM=""
 
 TEMP_ARGS=()
+REMOVE_OPTION=""
 for arg in "$@"; do
     case $arg in
-        -y)
+        -y|--yes)
             NOCONFIRM="--noconfirm"
             if [[ $AUR_HELPER == "paru" ]]; then
                 AURNOCONFIRM="--noconfirm"
             else
                 AURNOCONFIRM="--noconfirm --answerdiff None --answerclean None --mflags \"--noconfirm\""
             fi
+            ;;
+        --purge)
+            # Translate --purge to pacman and yay options
+            REMOVE_OPTION="-Rns"
             ;;
         *)
             TEMP_ARGS+=("$arg")
@@ -87,6 +92,21 @@ check_and_install_pactree() {
     fi
 }
 
+# Error helper
+# Verify argument exists
+error_and_exit() {
+    local error_type="$1"
+    case "$error_type" in
+        search)
+            echo "Error: Must specify a search term."
+            ;;
+        *)
+            echo "Error: '$1' requires at least one argument."
+            ;;
+    esac
+    exit 1
+}
+
 # Print help
 help() {
     cat <<EOF
@@ -114,6 +134,7 @@ Commands:
 
 Options:
     -y                              Answer yes to all questions
+    --purge                         Remove package dependencies and its configuration files.
 EOF
 }
 
@@ -136,13 +157,19 @@ case "$1" in
     ;;
     install)
         shift
+        if [ $# -eq 0 ]; then
+            error_and_exit "install"
+        fi
         prompt_for_sudo
         $SUDO pacman -S "$@" $NOCONFIRM
     ;;
     remove)
         shift
+        if [ $# -eq 0 ]; then
+            error_and_exit "remove"
+        fi
         prompt_for_sudo
-        $SUDO pacman -R "$@" $NOCONFIRM
+        $SUDO pacman $REMOVE_OPTION "$@" $NOCONFIRM
     ;;
     autoremove)
         prompt_for_sudo
@@ -167,12 +194,15 @@ case "$1" in
             pacman -Sl
         else
             echo "Unsupported list operation: $2"
-            echo "Supported operations are: --installed"
+            echo "Supported operations: --installed, --manual, --upgradable, --all"
             exit 1
         fi
     ;;
     search)
         shift
+        if [ $# -eq 0 ]; then
+            error_and_exit "search"
+        fi
         # Check if the input contains common regex patterns
         if [[ "$@" =~ [\^\$\.\|\(\)\[\]\{\}\+\] ]]; then
             # Input likely contains regex, don't convert
@@ -185,19 +215,31 @@ case "$1" in
     ;;
     show)
         shift
+        if [ $# -eq 0 ]; then
+            error_and_exit "show"
+        fi
         pacman -Si "$@"
     ;;
     find)
         shift
+        if [ $# -eq 0 ]; then
+            error_and_exit "find"
+        fi
         pacman -F "$@"
     ;;
     depends)
         shift
+        if [ $# -eq 0 ]; then
+            error_and_exit "depends"
+        fi
         check_and_install_pactree
         pactree -s -d1 -o1 "$@"
         ;;
     rdepends)
         shift
+        if [ $# -eq 0 ]; then
+            error_and_exit "rdepends"
+        fi
         check_and_install_pactree
         pactree -r -s -d1 -o1 "$@"
         ;;
@@ -210,17 +252,23 @@ case "$1" in
         case "$1" in
             search)
                 shift
+                if [ $# -eq 0 ]; then
+                    error_and_exit "search"
+                fi
                 $AUR_HELPER -Ssa "$@"
                 ;;
             install)
                 shift
+                if [ $# -eq 0 ]; then
+                    error_and_exit "install"
+                fi
                 $AUR_HELPER -S "$@" $AURNOCONFIRM
                 ;;
             upgrade)
                 if [[ $AUR_HELPER == "paru" ]]; then
                     $AUR_HELPER -Sua $AURNOCONFIRM
                 else
-                    $AUR_HELPER $AURNOCONFIRM
+                    $AUR_HELPER $AURNOCONFIRMF
                 fi
                 ;;
             *)
