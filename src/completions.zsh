@@ -85,6 +85,12 @@ _pac_all_packages() {
     _pac_installable_packages
 }
 
+# Completions for pkg.tar.zst
+_pac_local_install_files() {
+    # Complete with .pkg.tar.zst files in the current directory
+    _files -g "*.pkg.tar.zst"
+}
+
 _pac() {
      local -a cmds
     local curcontext="$curcontext" state line
@@ -109,6 +115,7 @@ _pac() {
             'autoclean:Remove old versions of installed packages'
             'depends:Show a list of dependencies for a package'
             'rdepends:Show a list of packages that depend on a package'
+            'local-install:Install a local package file (.pkg.tar.zst)'
             'aur:Access AUR (Arch User Repository) commands'
         )
         _describe -t commands 'Pac Commands' cmds -o nosort && ret=0
@@ -177,6 +184,9 @@ _pac() {
             else
                 _message "Specify a valid AUR command"
             fi
+            ;;
+        local-install)
+            _pac_local_install_files
             ;;
     esac
 }

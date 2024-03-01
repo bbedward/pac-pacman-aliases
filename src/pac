@@ -131,6 +131,7 @@ Commands:
     find <binary>                   Find a package by binary name
     depends <pkg>                   Shows a list of dependencies for <package>
     rdepends <pkg>                  Shows a list of packages that depend on <package>
+    local-install <pkg>             Install a local package file (.pkg.tar.zst)
     aur search <query>              Search in the AUR
     aur install <pkg>               Install a package from the AUR
     aur upgrade                     Upgrade AUR packages
@@ -160,6 +161,29 @@ case "$1" in
     upgrade|dist-upgrade)
         prompt_for_sudo
         $SUDO pacman -Syu $NOCONFIRM
+    ;;
+    local-install)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Error: 'install-local' requires at least one .pkg.tar.zst file as an argument."
+            exit 1
+        fi
+        # Array to hold valid package files
+        local_packages=()
+        for pkg in "$@"; do
+            if [[ $pkg != *.pkg.tar.zst ]]; then
+                echo "Error: All arguments to 'install-local' must be .pkg.tar.zst files. Invalid argument: $pkg"
+                exit 1
+            else
+                local_packages+=("$pkg")
+            fi
+        done
+        if [ ${#local_packages[@]} -eq 0 ]; then
+            echo "Error: No valid .pkg.tar.zst files provided to 'install-local'."
+            exit 1
+        fi
+        prompt_for_sudo
+        $SUDO pacman -U "${local_packages[@]}" $NOCONFIRM
     ;;
     install)
         shift

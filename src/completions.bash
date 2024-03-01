@@ -5,7 +5,7 @@ _pac_completion() {
     _get_comp_words_by_ref -n : cur prev words cword
 
     # Main pac commands
-    local commands="upgrade install remove list search show find clean autoremove autoclean depends rdepends aur"
+    local commands="upgrade install remove list search show find clean autoremove autoclean depends rdepends local-install aur"
 
     # List and AUR subcommands
     local list_subcommands="--installed --manual --upgradable --all"
@@ -28,6 +28,11 @@ _pac_completion() {
         show|remove)
             # Suggest only installed packages
             COMPREPLY=($(compgen -W "$(pacman -Qq 2>/dev/null)" -- "${cur}"))
+            return 0
+            ;;
+        local-install)
+            # Suggest .pkg.tar.zst files in the current directory
+            COMPREPLY=($(compgen -f -X '!*.pkg.tar.zst' -- "${cur}"))
             return 0
             ;;
     esac
