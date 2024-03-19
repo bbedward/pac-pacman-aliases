@@ -13,4 +13,5 @@ package() {
   install -Dm755 "$srcdir/pac" "$pkgdir/usr/local/bin/pac"
   install -Dm644 "$srcdir/completions.bash" "$pkgdir/usr/share/bash-completion/completions/pac"
   install -Dm644 "$srcdir/completions.zsh" "$pkgdir/usr/share/zsh/site-functions/_pac_pacman_completions"
+  install -Dm644 "$srcdir/completions.fish" "$pkgdir/usr/share/fish/completions/pac.fish"
 }
